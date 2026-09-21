@@ -4,16 +4,25 @@ import {
   Check,
   ChevronDown,
   Clock3,
+  Facebook,
   Flame,
   Home as HomeIcon,
+  Info,
   Leaf,
+  Mail,
+  MessageCircle,
   MapPin,
   Plus,
+  Phone,
   ShoppingBag,
   ShoppingCart,
   Sparkles,
   Star,
   Store,
+  Instagram,
+  ShieldCheck,
+  Timer,
+  Utensils,
   UserRound,
   X,
   ClipboardList,
@@ -343,6 +352,189 @@ function BottomNav({
   );
 }
 
+function FooterLink({
+  href,
+  children,
+}: {
+  href: string;
+  children: ReactNode;
+}) {
+  return (
+    <a
+      href={href}
+      className="footer-link inline-flex w-fit items-center text-[12px] font-medium text-[#e7dbe5] transition-colors hover:text-secondary"
+    >
+      {children}
+    </a>
+  );
+}
+
+function SiteFooter() {
+  return (
+    <footer
+      id="information"
+      className="mt-11 overflow-hidden rounded-[28px] bg-accent text-accent-foreground shadow-[0_20px_45px_hsl(276_31%_28%/.16)]"
+      aria-label="Central Kitchen information"
+    >
+      <div className="px-5 pb-7 pt-7 md:px-9 md:pb-9 md:pt-9">
+        <div className="flex flex-col gap-4 border-b border-[#8a6b8d]/50 pb-7 md:flex-row md:items-end md:justify-between">
+          <div className="max-w-md">
+            <p className="mb-2 flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.2em] text-secondary">
+              <Utensils size={13} /> The Central Kitchen promise
+            </p>
+            <h2 className="font-display text-[29px] leading-[1.02] tracking-[-0.03em] text-[#fff9ee]">
+              Good food, thoughtfully delivered.
+            </h2>
+            <p className="mt-3 text-xs leading-relaxed text-[#ded1d7]">
+              A neighbourhood-first food guide for meals worth making room for.
+            </p>
+          </div>
+          <a
+            href="#top"
+            className="press flex w-fit items-center gap-2 rounded-full bg-secondary px-4 py-2.5 text-xs font-bold text-secondary-foreground"
+          >
+            Back to top <ArrowRight size={14} className="-rotate-90" />
+          </a>
+        </div>
+
+        <div className="grid gap-7 border-b border-[#8a6b8d]/50 py-7 sm:grid-cols-2 lg:grid-cols-3">
+          <div>
+            <div className="mb-3 flex items-center gap-2 text-secondary">
+              <Star size={15} fill="currentColor" />
+              <h3 className="text-sm font-bold text-[#fff9ee]">About Central Kitchen</h3>
+            </div>
+            <p className="max-w-xs text-[12px] leading-relaxed text-[#ded1d7]">
+              We bring together independent restaurants, bright flavours, and reliable doorstep delivery in one friendly place.
+            </p>
+          </div>
+
+          <div>
+            <div className="mb-3 flex items-center gap-2 text-secondary">
+              <Store size={15} />
+              <h3 className="text-sm font-bold text-[#fff9ee]">Our Restaurants</h3>
+            </div>
+            <div className="flex flex-col gap-2">
+              <FooterLink href="#restaurants">Browse neighbourhood favourites</FooterLink>
+              <FooterLink href="#healthy-food">Healthy Food</FooterLink>
+              <FooterLink href="#spicy-food">Spicy Food</FooterLink>
+            </div>
+          </div>
+
+          <div>
+            <div className="mb-3 flex items-center gap-2 text-secondary">
+              <MapPin size={15} />
+              <h3 className="text-sm font-bold text-[#fff9ee]">Delivery Information</h3>
+            </div>
+            <p className="text-[12px] leading-relaxed text-[#ded1d7]">
+              Delivery is available across selected neighbourhoods. Fees and delivery times are shown before checkout.
+            </p>
+          </div>
+
+          <div>
+            <div className="mb-3 flex items-center gap-2 text-secondary">
+              <Timer size={15} />
+              <h3 className="text-sm font-bold text-[#fff9ee]">Timings</h3>
+            </div>
+            <p className="text-[12px] leading-relaxed text-[#ded1d7]">
+              Open daily<br />
+              10:00 AM – 11:30 PM
+            </p>
+          </div>
+
+          <div>
+            <div className="mb-3 flex items-center gap-2 text-secondary">
+              <Info size={15} />
+              <h3 className="text-sm font-bold text-[#fff9ee]">Important Information</h3>
+            </div>
+            <p className="text-[12px] leading-relaxed text-[#ded1d7]">
+              Menu availability, ingredients, taxes, and estimated times may vary by restaurant and location.
+            </p>
+          </div>
+
+          <div>
+            <div className="mb-3 flex items-center gap-2 text-secondary">
+              <ShieldCheck size={15} />
+              <h3 className="text-sm font-bold text-[#fff9ee]">Help &amp; Support</h3>
+            </div>
+            <p className="text-[12px] leading-relaxed text-[#ded1d7]">
+              Need a hand with an order? Reach us through phone, WhatsApp, or email and we&apos;ll help make it right.
+            </p>
+          </div>
+        </div>
+
+        <div id="contact" className="grid gap-3 border-b border-[#8a6b8d]/50 py-6 sm:grid-cols-2">
+          <a
+            href="tel:+919876543210"
+            className="press flex items-center gap-3 rounded-2xl border border-[#8a6b8d]/50 bg-[#4a3155]/45 px-4 py-3 transition-colors hover:bg-[#5b3e67]"
+          >
+            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-secondary text-secondary-foreground">
+              <Phone size={16} />
+            </span>
+            <span>
+              <span className="block text-[10px] font-bold uppercase tracking-[0.14em] text-[#bfaebe]">Contact Us</span>
+              <span className="mt-0.5 block text-xs font-bold text-[#fff9ee]">Phone / WhatsApp · +91 98765 43210</span>
+            </span>
+          </a>
+          <a
+            href="mailto:hello@centralkitchen.in"
+            className="press flex items-center gap-3 rounded-2xl border border-[#8a6b8d]/50 bg-[#4a3155]/45 px-4 py-3 transition-colors hover:bg-[#5b3e67]"
+          >
+            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-secondary text-secondary-foreground">
+              <Mail size={16} />
+            </span>
+            <span>
+              <span className="block text-[10px] font-bold uppercase tracking-[0.14em] text-[#bfaebe]">Email</span>
+              <span className="mt-0.5 block text-xs font-bold text-[#fff9ee]">hello@centralkitchen.in</span>
+            </span>
+          </a>
+        </div>
+
+        <div className="flex flex-col gap-5 pt-6 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex flex-wrap gap-x-4 gap-y-2">
+            <FooterLink href="#information">Terms &amp; Conditions</FooterLink>
+            <FooterLink href="#information">Privacy Policy</FooterLink>
+            <FooterLink href="#information">Refund &amp; Cancellation Policy</FooterLink>
+          </div>
+          <div className="flex items-center gap-2" aria-label="Social Media links">
+            <span className="mr-1 text-[10px] font-bold uppercase tracking-[0.14em] text-[#bfaebe]">Social</span>
+            <a
+              href="https://www.instagram.com/"
+              target="_blank"
+              rel="noreferrer"
+              aria-label="Central Kitchen on Instagram"
+              className="press flex h-8 w-8 items-center justify-center rounded-full border border-[#8a6b8d]/60 text-[#fff9ee] transition-colors hover:bg-secondary hover:text-secondary-foreground"
+            >
+              <Instagram size={15} />
+            </a>
+            <a
+              href="https://www.facebook.com/"
+              target="_blank"
+              rel="noreferrer"
+              aria-label="Central Kitchen on Facebook"
+              className="press flex h-8 w-8 items-center justify-center rounded-full border border-[#8a6b8d]/60 text-[#fff9ee] transition-colors hover:bg-secondary hover:text-secondary-foreground"
+            >
+              <Facebook size={15} />
+            </a>
+            <a
+              href="https://wa.me/919876543210"
+              target="_blank"
+              rel="noreferrer"
+              aria-label="Central Kitchen on WhatsApp"
+              className="press flex h-8 w-8 items-center justify-center rounded-full border border-[#8a6b8d]/60 text-[#fff9ee] transition-colors hover:bg-secondary hover:text-secondary-foreground"
+            >
+              <MessageCircle size={15} />
+            </a>
+          </div>
+        </div>
+
+        <p className="mt-6 text-[10px] font-medium tracking-wide text-[#bfaebe]">
+          Copyright © Central Kitchen. All rights reserved.
+        </p>
+      </div>
+    </footer>
+  );
+}
+
 function Home() {
   const [location, setLocation] = useState('Koramangala');
   const [locationOpen, setLocationOpen] = useState(false);
@@ -505,6 +697,8 @@ function Home() {
             <h2 className="font-display text-2xl text-accent">Made for your cravings.</h2>
             <p className="mx-auto mt-2 max-w-sm text-xs leading-relaxed text-muted-foreground">New neighbourhood favourites land here every week. Keep exploring.</p>
           </section>
+
+          <SiteFooter />
         </main>
       </div>
 
