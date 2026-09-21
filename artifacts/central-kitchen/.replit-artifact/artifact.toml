@@ -1,0 +1,28 @@
+kind = "web"
+previewPath = "/"
+title = "Central Kitchen"
+description = "A mobile-first food ordering web app for discovering neighborhood restaurants, browsing curated food sections, and adding meals to a cart."
+version = "1.0.0"
+id = "artifacts/central-kitchen"
+router = "path"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 22700
+
+[services.development]
+run = "pnpm --filter @workspace/central-kitchen run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/central-kitchen", "run", "build" ]
+serve = "static"
+publicDir = "artifacts/central-kitchen/dist/public"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "22700"
+BASE_PATH = "/"
