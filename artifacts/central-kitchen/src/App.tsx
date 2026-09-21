@@ -37,7 +37,15 @@ import { Route, Switch, useLocation, Router as WouterRouter } from 'wouter';
 
 const queryClient = new QueryClient();
 
-const restaurants = [
+type Restaurant = {
+  id: string;
+  name: string;
+  cuisine: string;
+  image: string;
+  tone: string;
+};
+
+const restaurants: Restaurant[] = [
   {
     id: 'f3',
     name: 'F3 - Fit Fury Fusion',
@@ -67,18 +75,11 @@ const restaurants = [
     tone: 'bg-[#91b7a4]',
   },
   {
-    id: 'restaurant-5',
-    name: 'Restaurant 5',
-    cuisine: 'Local picks · 28 min',
-    image: 'https://images.pexels.com/photos/262978/pexels-photo-262978.jpeg?auto=compress&cs=tinysrgb&w=400',
-    tone: 'bg-[#d5a8a0]',
-  },
-  {
-    id: 'restaurant-6',
-    name: 'Restaurant 6',
-    cuisine: 'Comfort food · 32 min',
-    image: 'https://images.pexels.com/photos/958545/pexels-photo-958545.jpeg?auto=compress&cs=tinysrgb&w=400',
-    tone: 'bg-[#aeb4c6]',
+    id: 'juice-and-milkshakes',
+    name: 'Juice and Milkshakes',
+    cuisine: 'Juices · 15 min',
+    image: 'https://images.pexels.com/photos/96974/pexels-photo-96974.jpeg?auto=compress&cs=tinysrgb&w=400',
+    tone: 'bg-[#f2b36f]',
   },
 ];
 
