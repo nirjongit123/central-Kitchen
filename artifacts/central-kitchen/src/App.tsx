@@ -410,28 +410,6 @@ function SiteFooter() {
 
           <div>
             <div className="mb-3 flex items-center gap-2 text-secondary">
-              <Store size={15} />
-              <h3 className="text-sm font-bold text-[#fff9ee]">Our Restaurants</h3>
-            </div>
-            <div className="flex flex-col gap-2">
-              <FooterLink href="#restaurants">Browse neighbourhood favourites</FooterLink>
-              <FooterLink href="#healthy-food">Healthy Food</FooterLink>
-              <FooterLink href="#spicy-food">Spicy Food</FooterLink>
-            </div>
-          </div>
-
-          <div>
-            <div className="mb-3 flex items-center gap-2 text-secondary">
-              <MapPin size={15} />
-              <h3 className="text-sm font-bold text-[#fff9ee]">Delivery Information</h3>
-            </div>
-            <p className="text-[12px] leading-relaxed text-[#ded1d7]">
-              Delivery is available across selected neighbourhoods. Fees and delivery times are shown before checkout.
-            </p>
-          </div>
-
-          <div>
-            <div className="mb-3 flex items-center gap-2 text-secondary">
               <Timer size={15} />
               <h3 className="text-sm font-bold text-[#fff9ee]">Timings</h3>
             </div>
