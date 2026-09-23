@@ -10,7 +10,6 @@ import {
   Plus,
   Search,
   ShoppingBag,
-  Star,
   Tag,
   Trash2,
   X,
@@ -314,12 +313,7 @@ export default function RestaurantMenuPage({ restaurant, items, categories }: Re
                   Made-to-order comfort food, playful Maggi, loaded buns, and bright drinks from your neighbourhood kitchen.
                 </p>
               </div>
-              <div className="grid grid-cols-3 gap-2 md:min-w-[250px]">
-                <div className="rounded-2xl bg-secondary/55 px-3 py-3 text-center">
-                  <Star size={15} className="mx-auto text-accent" fill="currentColor" />
-                  <p className="mt-1 text-sm font-bold text-accent">{restaurant.rating}</p>
-                  <p className="text-[9px] font-bold uppercase tracking-wide text-muted-foreground">Rating</p>
-                </div>
+              <div className="grid grid-cols-2 gap-2 md:min-w-[250px]">
                 <div className="rounded-2xl bg-secondary/55 px-3 py-3 text-center">
                   <Clock3 size={15} className="mx-auto text-accent" />
                   <p className="mt-1 text-sm font-bold text-accent">{restaurant.deliveryTime}</p>
@@ -352,9 +346,9 @@ export default function RestaurantMenuPage({ restaurant, items, categories }: Re
                 type="search"
                 value={query}
                 onChange={(event) => setQuery(event.target.value)}
-                placeholder="Search menu"
+                placeholder="Search in Spicy Wicy - Dicey"
                 className="min-w-0 flex-1 bg-transparent text-sm font-medium text-foreground outline-none placeholder:text-muted-foreground"
-                aria-label="Search menu"
+                aria-label="Search in Spicy Wicy - Dicey"
                 data-testid="input-search-menu"
               />
               {query && (
