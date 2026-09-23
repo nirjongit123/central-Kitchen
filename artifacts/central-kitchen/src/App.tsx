@@ -33,6 +33,12 @@ import { ErrorBoundary } from '@/components/error-boundary';
 import { Toaster } from '@/components/ui/toaster';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import NotFound from '@/pages/not-found';
+import RestaurantMenuPage from '@/pages/restaurant-menu';
+import {
+  spicyWicyCategories,
+  spicyWicyMenuItems,
+  spicyWicyRestaurant,
+} from '@/data/spicyWicyMenu';
 import { Route, Switch, useLocation, Router as WouterRouter } from 'wouter';
 
 const queryClient = new QueryClient();
@@ -184,7 +190,13 @@ function SectionHeading({
   );
 }
 
-function RestaurantRail({ onViewAll }: { onViewAll: () => void }) {
+function RestaurantRail({
+  onViewAll,
+  onRestaurantSelect,
+}: {
+  onViewAll: () => void;
+  onRestaurantSelect?: (restaurant: Restaurant) => void;
+}) {
   return (
     <section id="restaurants" className="scroll-mt-6">
       <SectionHeading eyebrow="Curated close by" title="Our Restaurants" action="See all" onAction={onViewAll} />
@@ -193,6 +205,7 @@ function RestaurantRail({ onViewAll }: { onViewAll: () => void }) {
           <button
             type="button"
             key={restaurant.id}
+            onClick={() => onRestaurantSelect?.(restaurant)}
             className="press group flex w-[94px] shrink-0 snap-start flex-col items-center text-center"
             data-testid={`button-restaurant-${restaurant.id}`}
           >
@@ -515,6 +528,7 @@ function SiteFooter() {
 }
 
 function Home() {
+  const [, setRouteLocation] = useLocation();
   const [location, setLocation] = useState('Koramangala');
   const [locationOpen, setLocationOpen] = useState(false);
   const [activeNav, setActiveNav] = useState('home');
@@ -644,10 +658,17 @@ function Home() {
             </div>
           </section>
 
-          <RestaurantRail onViewAll={() => {
-            setNotice('You are already seeing the neighbourhood shortlist.');
-            window.setTimeout(() => setNotice(''), 2200);
-          }} />
+           <RestaurantRail
+             onRestaurantSelect={(restaurant) => {
+               if (restaurant.id === 'spicy-wicy') {
+                 setRouteLocation('/restaurants/spicy-wicy');
+               }
+             }}
+             onViewAll={() => {
+               setNotice('You are already seeing the neighbourhood shortlist.');
+               window.setTimeout(() => setNotice(''), 2200);
+             }}
+           />
 
           <FoodSection
             id="healthy-food"
@@ -700,6 +721,13 @@ function Router() {
   return (
     <RoutedErrorBoundary>
       <Switch>
+        <Route path="/restaurants/spicy-wicy">
+          <RestaurantMenuPage
+            restaurant={spicyWicyRestaurant}
+            items={spicyWicyMenuItems}
+            categories={spicyWicyCategories}
+          />
+        </Route>
         <Route path="/" component={Home} />
         <Route component={NotFound} />
       </Switch>
