@@ -224,31 +224,40 @@ function CartSheet({
 function CategorySheet({
   open,
   categories,
+  items,
   onClose,
   onSelect,
 }: {
   open: boolean;
   categories: MenuCategory[];
+  items: MenuItem[];
   onClose: () => void;
   onSelect: (category: MenuCategory) => void;
 }) {
   if (!open) return null;
 
+  const itemIds = new Set(items.map((item) => item.id));
+  const categoryCount = (category: MenuCategory) => category.itemIds.filter((itemId) => itemIds.has(itemId)).length;
+
   return (
     <div className="fixed inset-0 z-[60] bg-accent/35 backdrop-blur-sm" role="dialog" aria-modal="true" aria-label="Spicy Wicy - Dicey menu categories">
       <button type="button" className="absolute inset-0 h-full w-full cursor-default" onClick={onClose} aria-label="Close menu" />
-      <aside className="absolute inset-x-0 bottom-0 max-h-[82dvh] overflow-y-auto rounded-t-[28px] bg-card p-5 shadow-[0_-18px_55px_hsl(276_31%_28%/.22)] md:bottom-5 md:left-1/2 md:max-w-[520px] md:-translate-x-1/2 md:rounded-[28px]">
-        <div className="mb-5 flex items-center justify-between">
+      <aside className="absolute inset-x-0 bottom-0 flex max-h-[76dvh] flex-col rounded-t-[28px] bg-card p-5 shadow-[0_-18px_55px_hsl(276_31%_28%/.22)] md:bottom-5 md:left-1/2 md:max-w-[520px] md:-translate-x-1/2 md:rounded-[28px]">
+        <div className="mb-4 flex items-start justify-between gap-4">
           <div>
             <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-primary">Browse by category</p>
             <h2 className="mt-1 font-display text-2xl text-accent">Spicy Wicy - Dicey menu</h2>
           </div>
-          <button type="button" onClick={onClose} className="press flex h-9 w-9 items-center justify-center rounded-full bg-muted text-foreground" aria-label="Close menu">
-            <X size={17} />
-          </button>
+          <span className="shrink-0 rounded-full bg-secondary px-3 py-1.5 text-[10px] font-bold text-secondary-foreground">{items.length} items</span>
         </div>
-        <div className="grid gap-2">
-          {categories.map((category) => (
+
+        <div className="mb-3 flex items-center justify-between rounded-2xl bg-secondary/55 px-4 py-3">
+          <span className="text-sm font-bold text-foreground">Recommended for you</span>
+          <span className="rounded-full bg-card px-2.5 py-1 text-xs font-bold text-accent">{items.length}</span>
+        </div>
+
+        <div className="min-h-0 space-y-2 overflow-y-auto pr-1">
+          {categories.filter((category) => category.id !== 'recommended').map((category) => (
             <button
               type="button"
               key={category.id}
@@ -256,10 +265,19 @@ function CategorySheet({
               className="press flex items-center justify-between rounded-2xl border border-border px-4 py-3 text-left transition-colors hover:bg-muted"
               data-testid={`button-menu-category-${category.id}`}
             >
-              <span className="text-sm font-bold text-foreground">{category.title}</span>
-              <ChevronRight size={16} className="text-muted-foreground" />
+              <span className="flex min-w-0 items-center gap-3">
+                <span className="truncate text-sm font-bold text-foreground">{category.title}</span>
+                <span className="shrink-0 rounded-full bg-muted px-2 py-1 text-[10px] font-bold text-muted-foreground">{categoryCount(category)}</span>
+              </span>
+              <ChevronRight size={16} className="ml-3 shrink-0 text-muted-foreground" />
             </button>
           ))}
+        </div>
+
+        <div className="mt-4 flex justify-end border-t border-border pt-3">
+          <button type="button" onClick={onClose} className="press flex items-center gap-2 rounded-full bg-muted px-4 py-2 text-xs font-bold text-foreground" aria-label="Close menu">
+            Close <X size={15} />
+          </button>
         </div>
       </aside>
     </div>
@@ -809,7 +827,7 @@ export default function RestaurantMenuPage({ restaurant, items, categories }: Re
         </div>
       )}
 
-      <CategorySheet open={menuOpen} categories={categories} onClose={() => setMenuOpen(false)} onSelect={selectCategory} />
+      <CategorySheet open={menuOpen} categories={categories} items={items} onClose={() => setMenuOpen(false)} onSelect={selectCategory} />
       <CartSheet
         open={cartOpen}
         items={cartItems}
