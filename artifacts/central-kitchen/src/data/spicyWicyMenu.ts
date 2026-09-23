@@ -204,7 +204,7 @@ export const spicyWicyCategories: MenuCategory[] = [
 
 export const spicyWicyRestaurant = {
   name: 'Spicy Wicy - Dicey',
-  location: 'Koramangala · 2.1 km away',
+  location: 'Koramangala',
   deliveryTime: '25–35 min',
   offers: ['20% off up to ₹100', 'Free delivery above ₹299', 'Extra 10% off with select offers'],
 };

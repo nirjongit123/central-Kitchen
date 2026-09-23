@@ -1,12 +1,12 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   ArrowLeft,
   Check,
   CheckCircle2,
   ChevronRight,
-  Clock3,
   MapPin,
   Menu as MenuIcon,
+  MoreVertical,
   Minus,
   PackageCheck,
   Plus,
@@ -502,6 +502,7 @@ export default function RestaurantMenuPage({ restaurant, items, categories }: Re
   const [orderView, setOrderView] = useState<'confirmation' | 'tracking' | null>(null);
   const [activeCategoryId, setActiveCategoryId] = useState('all');
   const [notice, setNotice] = useState('');
+  const searchInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (order) {
@@ -594,42 +595,51 @@ export default function RestaurantMenuPage({ restaurant, items, categories }: Re
   return (
     <div className="grain app-shell min-h-[100dvh] pb-32">
       <div className="mx-auto max-w-5xl px-5 pb-10 pt-5 md:px-10 md:pt-8 lg:px-14">
-        <header className="sticky top-0 z-30 -mx-5 border-b border-border/70 bg-background/92 px-5 pb-4 pt-5 backdrop-blur-xl md:static md:mx-0 md:border-0 md:bg-transparent md:px-0 md:pb-0 md:pt-0">
-          <div className="flex items-center justify-between gap-3">
+        <header className="-mx-5 border-border/70 px-5 md:mx-0 md:px-0">
+          <div className="relative sticky top-0 z-30 -mx-5 flex items-center justify-between gap-3 border-b border-border/70 bg-background/92 px-5 pb-4 pt-5 backdrop-blur-xl md:static md:mx-0 md:border-0 md:bg-transparent md:px-0 md:pb-0 md:pt-0">
             <button type="button" onClick={() => setLocation('/')} className="press flex items-center gap-2 rounded-full px-1 py-1 text-sm font-bold text-accent" data-testid="button-back-home">
               <span className="flex h-9 w-9 items-center justify-center rounded-full border border-border bg-card shadow-sm">
                 <ArrowLeft size={17} />
               </span>
               Back
             </button>
-            <span className="font-display text-[22px] tracking-[-0.04em] text-accent">Central Kitchen</span>
-            <button type="button" onClick={() => setCartOpen(true)} className="press relative flex h-10 w-10 items-center justify-center rounded-2xl border border-border bg-card text-accent shadow-sm" aria-label={`Open cart with ${cartCount} items`}>
-              <ShoppingBag size={18} />
-              {cartCount > 0 && <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1 text-[10px] font-bold text-primary-foreground">{cartCount}</span>}
-            </button>
+            <span className="absolute left-1/2 top-6 -translate-x-1/2 font-display text-[18px] tracking-[-0.04em] text-accent">Central Kitchen</span>
+            <div className="ml-auto flex items-center gap-1">
+              <button
+                type="button"
+                onClick={() => {
+                  searchInputRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                  window.setTimeout(() => searchInputRef.current?.focus(), 250);
+                }}
+                className="press flex h-9 w-9 items-center justify-center rounded-2xl border border-border bg-card text-accent shadow-sm"
+                aria-label="Search Spicy Wicy - Dicey menu"
+                data-testid="button-top-search"
+              >
+                <Search size={18} />
+              </button>
+              <button type="button" onClick={() => setCartOpen(true)} className="press relative flex h-9 w-9 items-center justify-center rounded-2xl border border-border bg-card text-accent shadow-sm" aria-label={`Open cart with ${cartCount} items`}>
+                <ShoppingBag size={18} />
+                {cartCount > 0 && <span className="absolute -right-1 -top-1 flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1 text-[10px] font-bold text-primary-foreground">{cartCount}</span>}
+              </button>
+              <button
+                type="button"
+                onClick={() => setMenuOpen(true)}
+                className="press flex h-9 w-9 items-center justify-center rounded-2xl border border-border bg-card text-accent shadow-sm"
+                aria-label="Open Spicy Wicy - Dicey menu categories"
+                data-testid="button-top-menu"
+              >
+                <MoreVertical size={18} />
+              </button>
+            </div>
           </div>
 
           <div className="mt-6 rounded-[26px] border border-border bg-card p-5 shadow-[0_12px_35px_hsl(276_31%_28%/.07)] md:p-7">
-            <div className="flex flex-col gap-5 md:flex-row md:items-start md:justify-between">
-              <div>
-                <p className="mb-2 text-[10px] font-bold uppercase tracking-[0.2em] text-primary">Restaurant menu</p>
-                <h1 className="font-display text-[34px] leading-[.98] tracking-[-0.04em] text-accent md:text-5xl">{restaurant.name}</h1>
-                <p className="mt-3 max-w-xl text-xs leading-relaxed text-muted-foreground">
-                  Made-to-order comfort food, playful Maggi, loaded buns, and bright drinks from your neighbourhood kitchen.
-                </p>
-              </div>
-              <div className="grid grid-cols-2 gap-2 md:min-w-[250px]">
-                <div className="rounded-2xl bg-secondary/55 px-3 py-3 text-center">
-                  <Clock3 size={15} className="mx-auto text-accent" />
-                  <p className="mt-1 text-sm font-bold text-accent">{restaurant.deliveryTime}</p>
-                  <p className="text-[9px] font-bold uppercase tracking-wide text-muted-foreground">Delivery</p>
-                </div>
-                <div className="rounded-2xl bg-secondary/55 px-3 py-3 text-center">
-                  <MapPin size={15} className="mx-auto text-accent" />
-                  <p className="mt-1 truncate text-sm font-bold text-accent">2.1 km</p>
-                  <p className="text-[9px] font-bold uppercase tracking-wide text-muted-foreground">Location</p>
-                </div>
-              </div>
+            <div>
+              <p className="mb-2 text-[10px] font-bold uppercase tracking-[0.2em] text-primary">Restaurant menu</p>
+              <h1 className="font-display text-[34px] leading-[.98] tracking-[-0.04em] text-accent md:text-5xl">{restaurant.name}</h1>
+              <p className="mt-3 max-w-xl text-xs leading-relaxed text-muted-foreground">
+                Made-to-order comfort food, playful Maggi, loaded buns, and bright drinks from your neighbourhood kitchen.
+              </p>
             </div>
 
             <div className="mt-5 flex items-center gap-2 text-xs font-semibold text-muted-foreground">
@@ -655,6 +665,7 @@ export default function RestaurantMenuPage({ restaurant, items, categories }: Re
                 className="min-w-0 flex-1 bg-transparent text-sm font-medium text-foreground outline-none placeholder:text-muted-foreground"
                 aria-label="Search in Spicy Wicy - Dicey"
                 data-testid="input-search-menu"
+                ref={searchInputRef}
               />
               {query && (
                 <button type="button" onClick={() => setQuery('')} aria-label="Clear menu search">
