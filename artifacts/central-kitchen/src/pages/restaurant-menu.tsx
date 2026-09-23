@@ -1,17 +1,21 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
   ArrowLeft,
   Check,
+  CheckCircle2,
   ChevronRight,
   Clock3,
   MapPin,
   Menu as MenuIcon,
   Minus,
+  PackageCheck,
   Plus,
   Search,
   ShoppingBag,
+  Star,
   Tag,
   Trash2,
+  Truck,
   X,
 } from 'lucide-react';
 import { useLocation } from 'wouter';
@@ -20,7 +24,6 @@ import type { MenuCategory, MenuDiet, MenuItem } from '@/data/spicyWicyMenu';
 type RestaurantMenuPageProps = {
   restaurant: {
     name: string;
-    rating: string;
     location: string;
     deliveryTime: string;
     offers: string[];
@@ -31,6 +34,27 @@ type RestaurantMenuPageProps = {
 
 type DietFilter = MenuDiet | 'all';
 type Cart = Record<string, number>;
+type OrderStatus = 'placed' | 'preparing' | 'out-for-delivery' | 'delivered';
+
+type CustomerOrder = {
+  id: string;
+  items: Cart;
+  subtotal: number;
+  status: OrderStatus;
+  rating?: number;
+  review?: string;
+};
+
+const orderStorageKey = 'central-kitchen-spicy-wicy-order';
+
+const orderStatusDetails: Record<OrderStatus, { label: string; description: string }> = {
+  placed: { label: 'Order placed', description: 'Your order has been sent to the kitchen.' },
+  preparing: { label: 'Being prepared', description: 'The kitchen is preparing your order now.' },
+  'out-for-delivery': { label: 'Out for delivery', description: 'Your order is on its way to you.' },
+  delivered: { label: 'Delivered', description: 'Enjoy your Spicy Wicy - Dicey order.' },
+};
+
+const orderStatusSequence: OrderStatus[] = ['placed', 'preparing', 'out-for-delivery', 'delivered'];
 
 const dietLabels: Record<MenuDiet, string> = {
   veg: 'Veg',
@@ -82,6 +106,11 @@ function MenuItemCard({
           </div>
           <div className="mt-1.5 flex items-center gap-2">
             <DietMark diet={item.dietary} />
+            {item.customisable && (
+              <span className="rounded-full bg-secondary/65 px-2 py-0.5 text-[9px] font-bold text-secondary-foreground">
+                Customisable
+              </span>
+            )}
           </div>
           <p className="mt-1.5 line-clamp-2 text-[11px] leading-[1.35] text-muted-foreground">{item.description}</p>
         </div>
@@ -237,6 +266,222 @@ function CategorySheet({
   );
 }
 
+function CheckoutSheet({
+  open,
+  items,
+  cart,
+  subtotal,
+  onClose,
+  onPlaceOrder,
+}: {
+  open: boolean;
+  items: MenuItem[];
+  cart: Cart;
+  subtotal: number;
+  onClose: () => void;
+  onPlaceOrder: () => void;
+}) {
+  if (!open) return null;
+
+  return (
+    <div className="fixed inset-0 z-[75] bg-accent/35 backdrop-blur-sm" role="dialog" aria-modal="true" aria-label="Checkout">
+      <button type="button" className="absolute inset-0 h-full w-full cursor-default" onClick={onClose} aria-label="Close checkout" />
+      <aside className="absolute inset-x-0 bottom-0 max-h-[84dvh] overflow-y-auto rounded-t-[28px] bg-card p-5 shadow-[0_-18px_55px_hsl(276_31%_28%/.22)] md:bottom-5 md:left-1/2 md:max-w-[520px] md:-translate-x-1/2 md:rounded-[28px]">
+        <div className="mb-5 flex items-center justify-between">
+          <div>
+            <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-primary">Spicy Wicy - Dicey</p>
+            <h2 className="mt-1 font-display text-2xl text-accent">Checkout</h2>
+          </div>
+          <button type="button" onClick={onClose} className="press flex h-9 w-9 items-center justify-center rounded-full bg-muted text-foreground" aria-label="Close checkout">
+            <X size={17} />
+          </button>
+        </div>
+
+        <div className="rounded-2xl bg-secondary/45 px-4 py-4">
+          <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-muted-foreground">Deliver to</p>
+          <p className="mt-1 text-sm font-bold text-foreground">Koramangala</p>
+          <p className="mt-1 text-xs text-muted-foreground">Estimated delivery · 25–35 min</p>
+        </div>
+
+        <div className="mt-4 space-y-2">
+          {items.map((item) => (
+            <div key={item.id} className="flex items-center justify-between gap-3 rounded-xl border border-border px-3 py-2.5">
+              <p className="min-w-0 truncate text-xs font-bold text-foreground">
+                {cart[item.id]} × {item.name}
+              </p>
+              <span className="shrink-0 text-xs font-bold text-accent">₹{item.price * (cart[item.id] ?? 0)}</span>
+            </div>
+          ))}
+        </div>
+
+        <div className="mt-5 flex items-center justify-between border-t border-border pt-4">
+          <span className="text-xs font-semibold text-muted-foreground">Subtotal</span>
+          <span className="font-display text-2xl text-accent">₹{subtotal}</span>
+        </div>
+        <button type="button" onClick={onPlaceOrder} className="press mt-4 flex h-12 w-full items-center justify-center gap-2 rounded-2xl bg-primary text-sm font-bold text-primary-foreground">
+          Place order <ChevronRight size={17} />
+        </button>
+      </aside>
+    </div>
+  );
+}
+
+function OrderFlowSheet({
+  open,
+  phase,
+  order,
+  items,
+  onClose,
+  onTrack,
+  onAdvance,
+  onSaveRating,
+}: {
+  open: boolean;
+  phase: 'confirmation' | 'tracking';
+  order: CustomerOrder | null;
+  items: MenuItem[];
+  onClose: () => void;
+  onTrack: () => void;
+  onAdvance: () => void;
+  onSaveRating: (rating: number, review: string) => void;
+}) {
+  const [rating, setRating] = useState(order?.rating ?? 0);
+  const [review, setReview] = useState(order?.review ?? '');
+
+  useEffect(() => {
+    setRating(order?.rating ?? 0);
+    setReview(order?.review ?? '');
+  }, [order?.id, order?.rating, order?.review]);
+
+  if (!open || !order) return null;
+
+  const statusIndex = orderStatusSequence.indexOf(order.status);
+  const orderItems = items.filter((item) => (order.items[item.id] ?? 0) > 0);
+  const isDelivered = order.status === 'delivered';
+
+  return (
+    <div className="fixed inset-0 z-[75] bg-accent/35 backdrop-blur-sm" role="dialog" aria-modal="true" aria-label={phase === 'confirmation' ? 'Order confirmation' : 'Order tracking'}>
+      <button type="button" className="absolute inset-0 h-full w-full cursor-default" onClick={onClose} aria-label="Close order details" />
+      <aside className="absolute inset-x-0 bottom-0 max-h-[88dvh] overflow-y-auto rounded-t-[28px] bg-card p-5 shadow-[0_-18px_55px_hsl(276_31%_28%/.22)] md:bottom-5 md:left-1/2 md:max-w-[560px] md:-translate-x-1/2 md:rounded-[28px]">
+        <div className="mb-5 flex items-center justify-between">
+          <div>
+            <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-primary">Order #{order.id}</p>
+            <h2 className="mt-1 font-display text-2xl text-accent">{phase === 'confirmation' ? 'Order confirmed' : 'Order tracking'}</h2>
+          </div>
+          <button type="button" onClick={onClose} className="press flex h-9 w-9 items-center justify-center rounded-full bg-muted text-foreground" aria-label="Close order details">
+            <X size={17} />
+          </button>
+        </div>
+
+        {phase === 'confirmation' ? (
+          <>
+            <div className="rounded-[24px] bg-secondary/55 px-5 py-7 text-center">
+              <CheckCircle2 className="mx-auto text-[#537b67]" size={38} />
+              <p className="mt-3 text-sm font-bold text-foreground">Thanks, your order is on its way to the kitchen.</p>
+              <p className="mt-1 text-xs text-muted-foreground">Estimated delivery · 25–35 min</p>
+            </div>
+            <div className="mt-4 flex items-center justify-between rounded-2xl border border-border px-4 py-3">
+              <span className="text-xs font-semibold text-muted-foreground">{Object.values(order.items).reduce((sum, quantity) => sum + quantity, 0)} items</span>
+              <span className="font-display text-2xl text-accent">₹{order.subtotal}</span>
+            </div>
+            <button type="button" onClick={onTrack} className="press mt-4 flex h-12 w-full items-center justify-center gap-2 rounded-2xl bg-primary text-sm font-bold text-primary-foreground">
+              Track order <Truck size={17} />
+            </button>
+          </>
+        ) : (
+          <>
+            <div className="rounded-[24px] border border-border bg-background px-4 py-4">
+              <div className="flex items-center gap-3">
+                <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-secondary text-accent">
+                  {isDelivered ? <PackageCheck size={20} /> : <Truck size={20} />}
+                </span>
+                <div>
+                  <p className="text-sm font-bold text-foreground">{orderStatusDetails[order.status].label}</p>
+                  <p className="mt-0.5 text-xs text-muted-foreground">{orderStatusDetails[order.status].description}</p>
+                </div>
+              </div>
+              <div className="mt-5 space-y-3">
+                {orderStatusSequence.map((status, index) => {
+                  const complete = index <= statusIndex;
+                  return (
+                    <div key={status} className="flex items-center gap-3">
+                      <span className={`flex h-6 w-6 items-center justify-center rounded-full text-[10px] font-bold ${complete ? 'bg-primary text-primary-foreground' : 'border border-border text-muted-foreground'}`}>
+                        {complete ? <Check size={13} strokeWidth={3} /> : index + 1}
+                      </span>
+                      <span className={`text-xs font-semibold ${complete ? 'text-foreground' : 'text-muted-foreground'}`}>{orderStatusDetails[status].label}</span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            {!isDelivered && (
+              <button type="button" onClick={onAdvance} className="press mt-4 flex h-11 w-full items-center justify-center gap-2 rounded-2xl bg-primary text-sm font-bold text-primary-foreground">
+                {order.status === 'placed' ? 'Start preparing order' : order.status === 'preparing' ? 'Mark out for delivery' : 'Mark as delivered'}
+                <ChevronRight size={17} />
+              </button>
+            )}
+
+            {isDelivered && !order.rating && (
+              <div className="mt-4 rounded-[24px] bg-secondary/45 p-5">
+                <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-primary">Delivered just now</p>
+                <h3 className="mt-2 font-display text-2xl text-accent">How was your order?</h3>
+                <p className="mt-1 text-sm font-semibold text-foreground">Rate Spicy Wicy - Dicey</p>
+                <div className="mt-4 flex gap-2" role="group" aria-label="Rate your order from one to five stars">
+                  {[1, 2, 3, 4, 5].map((value) => (
+                    <button
+                      type="button"
+                      key={value}
+                      onClick={() => setRating(value)}
+                      className={`press flex h-10 w-10 items-center justify-center rounded-full border ${rating >= value ? 'border-primary bg-primary text-primary-foreground' : 'border-border bg-card text-muted-foreground'}`}
+                      aria-label={`${value} star${value === 1 ? '' : 's'}`}
+                      aria-pressed={rating === value}
+                    >
+                      <Star size={17} fill={rating >= value ? 'currentColor' : 'none'} />
+                    </button>
+                  ))}
+                </div>
+                <textarea
+                  value={review}
+                  onChange={(event) => setReview(event.target.value)}
+                  placeholder="Add an optional review"
+                  className="mt-4 min-h-20 w-full resize-none rounded-2xl border border-border bg-card px-3 py-3 text-sm text-foreground outline-none placeholder:text-muted-foreground"
+                  aria-label="Optional review"
+                />
+                <button type="button" disabled={!rating} onClick={() => onSaveRating(rating, review)} className="press mt-3 flex h-11 w-full items-center justify-center rounded-2xl bg-primary text-sm font-bold text-primary-foreground disabled:cursor-not-allowed disabled:opacity-50">
+                  Save rating
+                </button>
+              </div>
+            )}
+
+            {isDelivered && order.rating && (
+              <div className="mt-4 rounded-[24px] bg-secondary/45 px-5 py-5 text-center">
+                <div className="flex justify-center gap-1 text-primary">
+                  {[1, 2, 3, 4, 5].map((value) => <Star key={value} size={18} fill={value <= order.rating! ? 'currentColor' : 'none'} />)}
+                </div>
+                <p className="mt-3 text-sm font-bold text-foreground">Thanks for rating your order.</p>
+                {order.review && <p className="mt-1 text-xs text-muted-foreground">“{order.review}”</p>}
+              </div>
+            )}
+
+            <div className="mt-4 rounded-2xl border border-border px-4 py-3">
+              <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-muted-foreground">Order summary</p>
+              <div className="mt-2 space-y-1.5">
+                {orderItems.map((item) => (
+                  <div key={item.id} className="flex justify-between gap-3 text-xs">
+                    <span className="truncate text-muted-foreground">{order.items[item.id]} × {item.name}</span>
+                    <span className="shrink-0 font-semibold text-accent">₹{item.price * order.items[item.id]}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </>
+        )}
+      </aside>
+    </div>
+  );
+}
+
 export default function RestaurantMenuPage({ restaurant, items, categories }: RestaurantMenuPageProps) {
   const [, setLocation] = useLocation();
   const [cart, setCart] = useState<Cart>({});
@@ -244,7 +489,27 @@ export default function RestaurantMenuPage({ restaurant, items, categories }: Re
   const [query, setQuery] = useState('');
   const [menuOpen, setMenuOpen] = useState(false);
   const [cartOpen, setCartOpen] = useState(false);
+  const [checkoutOpen, setCheckoutOpen] = useState(false);
+  const [order, setOrder] = useState<CustomerOrder | null>(() => {
+    if (typeof window === 'undefined') return null;
+    try {
+      const savedOrder = window.localStorage.getItem(orderStorageKey);
+      return savedOrder ? (JSON.parse(savedOrder) as CustomerOrder) : null;
+    } catch {
+      return null;
+    }
+  });
+  const [orderView, setOrderView] = useState<'confirmation' | 'tracking' | null>(null);
+  const [activeCategoryId, setActiveCategoryId] = useState('all');
   const [notice, setNotice] = useState('');
+
+  useEffect(() => {
+    if (order) {
+      window.localStorage.setItem(orderStorageKey, JSON.stringify(order));
+    } else {
+      window.localStorage.removeItem(orderStorageKey);
+    }
+  }, [order]);
 
   const itemById = useMemo(() => new Map(items.map((item) => [item.id, item])), [items]);
   const cartItems = useMemo(() => items.filter((item) => (cart[item.id] ?? 0) > 0), [cart, items]);
@@ -283,7 +548,47 @@ export default function RestaurantMenuPage({ restaurant, items, categories }: Re
 
   const selectCategory = (category: MenuCategory) => {
     setMenuOpen(false);
+    setQuery('');
+    setDietFilter('all');
+    setActiveCategoryId(category.id);
     window.setTimeout(() => document.getElementById(`category-${category.id}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 0);
+  };
+
+  const selectAllCategories = () => {
+    setQuery('');
+    setDietFilter('all');
+    setActiveCategoryId('all');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const placeOrder = () => {
+    if (!cartCount) return;
+    const nextOrder: CustomerOrder = {
+      id: `${Date.now()}`.slice(-6),
+      items: { ...cart },
+      subtotal: cartTotal,
+      status: 'placed',
+    };
+    setOrder(nextOrder);
+    setCart({});
+    setCheckoutOpen(false);
+    setCartOpen(false);
+    setOrderView('confirmation');
+  };
+
+  const advanceOrder = () => {
+    setOrder((current) => {
+      if (!current) return current;
+      const currentIndex = orderStatusSequence.indexOf(current.status);
+      const nextStatus = orderStatusSequence[Math.min(currentIndex + 1, orderStatusSequence.length - 1)];
+      return { ...current, status: nextStatus };
+    });
+  };
+
+  const saveRating = (rating: number, review: string) => {
+    setOrder((current) => (current ? { ...current, rating, review: review.trim() } : current));
+    setNotice('Thanks for rating your order');
+    window.setTimeout(() => setNotice(''), 2200);
   };
 
   return (
@@ -360,21 +665,67 @@ export default function RestaurantMenuPage({ restaurant, items, categories }: Re
           </div>
         </header>
 
+        {order && (
+          <button
+            type="button"
+            onClick={() => setOrderView('tracking')}
+            className="press mt-5 flex w-full items-center justify-between gap-3 rounded-2xl border border-border bg-card px-4 py-3 text-left shadow-[0_7px_22px_hsl(276_31%_28%/.05)]"
+            data-testid="button-order-status"
+          >
+            <span className="flex min-w-0 items-center gap-3">
+              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-secondary text-accent">
+                {order.status === 'delivered' ? <PackageCheck size={17} /> : <Truck size={17} />}
+              </span>
+              <span className="min-w-0">
+                <span className="block text-xs font-bold text-foreground">{orderStatusDetails[order.status].label}</span>
+                <span className="mt-0.5 block truncate text-[11px] text-muted-foreground">{orderStatusDetails[order.status].description}</span>
+              </span>
+            </span>
+            <span className="shrink-0 text-xs font-bold text-primary">
+              {order.status === 'delivered' && !order.rating ? 'Rate your order' : 'Track order'}
+              <ChevronRight size={15} className="ml-1 inline" />
+            </span>
+          </button>
+        )}
+
         <main className="mt-7">
-          <div className="sticky top-[78px] z-20 -mx-5 mb-8 flex gap-2 overflow-x-auto bg-background/92 px-5 py-2 backdrop-blur-xl md:static md:mx-0 md:bg-transparent md:px-0 md:py-0">
-            {(['all', 'veg', 'egg', 'non-veg'] as DietFilter[]).map((filter) => (
+          <div className="sticky top-[78px] z-20 -mx-5 mb-8 bg-background/92 px-5 py-2 backdrop-blur-xl md:static md:mx-0 md:bg-transparent md:px-0 md:py-0">
+            <div className="flex gap-2 overflow-x-auto">
+              {(['all', 'veg', 'egg', 'non-veg'] as DietFilter[]).map((filter) => (
+                <button
+                  type="button"
+                  key={filter}
+                  onClick={() => setDietFilter(filter)}
+                  className={`press shrink-0 rounded-full border px-4 py-2 text-xs font-bold transition-colors ${
+                    dietFilter === filter ? 'border-accent bg-accent text-accent-foreground' : 'border-border bg-card text-muted-foreground hover:text-foreground'
+                  }`}
+                  data-testid={`button-filter-${filter}`}
+                >
+                  {filter === 'all' ? 'All' : dietLabels[filter]}
+                </button>
+              ))}
+            </div>
+            <div className="hide-scrollbar mt-2 flex gap-2 overflow-x-auto border-t border-border/70 pt-2" data-testid="category-navigation">
               <button
                 type="button"
-                key={filter}
-                onClick={() => setDietFilter(filter)}
-                className={`press shrink-0 rounded-full border px-4 py-2 text-xs font-bold transition-colors ${
-                  dietFilter === filter ? 'border-accent bg-accent text-accent-foreground' : 'border-border bg-card text-muted-foreground hover:text-foreground'
-                }`}
-                data-testid={`button-filter-${filter}`}
+                onClick={selectAllCategories}
+                className={`press shrink-0 rounded-full px-3 py-1.5 text-[11px] font-bold ${activeCategoryId === 'all' ? 'bg-secondary text-secondary-foreground' : 'bg-card text-muted-foreground'}`}
+                data-testid="button-category-all"
               >
-                {filter === 'all' ? 'All' : dietLabels[filter]}
+                All categories
               </button>
-            ))}
+              {categories.map((category) => (
+                <button
+                  type="button"
+                  key={category.id}
+                  onClick={() => selectCategory(category)}
+                  className={`press shrink-0 rounded-full px-3 py-1.5 text-[11px] font-bold ${activeCategoryId === category.id ? 'bg-secondary text-secondary-foreground' : 'bg-card text-muted-foreground'}`}
+                  data-testid={`button-category-nav-${category.id}`}
+                >
+                  {category.title}
+                </button>
+              ))}
+            </div>
           </div>
 
           <div className="space-y-10">
@@ -389,7 +740,7 @@ export default function RestaurantMenuPage({ restaurant, items, categories }: Re
                   </div>
                   <span className="hidden text-xs font-semibold text-muted-foreground sm:block">Spicy Wicy - Dicey</span>
                 </div>
-                <div className="grid gap-3.5 md:grid-cols-2 md:gap-5">
+                <div className="grid gap-3.5">
                   {categoryItems.map((item) => (
                     <MenuItemCard
                       key={`${category.id}-${item.id}`}
@@ -417,7 +768,7 @@ export default function RestaurantMenuPage({ restaurant, items, categories }: Re
       <button
         type="button"
         onClick={() => setMenuOpen(true)}
-        className={`press fixed right-5 z-40 flex h-12 items-center gap-2 rounded-full bg-accent px-4 text-xs font-bold text-accent-foreground shadow-[0_12px_32px_hsl(276_31%_28%/.25)] ${cartCount > 0 ? 'bottom-[88px]' : 'bottom-5'}`}
+        className={`press fixed right-5 z-40 flex h-12 items-center gap-2 rounded-full bg-accent px-4 text-xs font-bold text-accent-foreground shadow-[0_12px_32px_hsl(276_31%_28%/.25)] ${cartCount > 0 ? 'bottom-[88px]' : 'bottom-24'}`}
         data-testid="button-floating-menu"
       >
         <MenuIcon size={17} /> Menu
@@ -458,9 +809,26 @@ export default function RestaurantMenuPage({ restaurant, items, categories }: Re
         onRemove={(id) => setQuantity(id, -(cart[id] ?? 0))}
         onCheckout={() => {
           setCartOpen(false);
-          setNotice('Checkout is ready for your order');
-          window.setTimeout(() => setNotice(''), 2200);
+          setCheckoutOpen(true);
         }}
+      />
+      <CheckoutSheet
+        open={checkoutOpen}
+        items={cartItems}
+        cart={cart}
+        subtotal={cartTotal}
+        onClose={() => setCheckoutOpen(false)}
+        onPlaceOrder={placeOrder}
+      />
+      <OrderFlowSheet
+        open={Boolean(order && orderView)}
+        phase={orderView ?? 'tracking'}
+        order={order}
+        items={items}
+        onClose={() => setOrderView(null)}
+        onTrack={() => setOrderView('tracking')}
+        onAdvance={advanceOrder}
+        onSaveRating={saveRating}
       />
     </div>
   );

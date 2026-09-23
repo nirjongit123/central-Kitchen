@@ -7,6 +7,7 @@ export type MenuItem = {
   description: string;
   dietary: MenuDiet;
   image: string;
+  customisable?: boolean;
 };
 
 export type MenuCategory = {
@@ -35,13 +36,14 @@ const item = (
   dietary: MenuDiet,
   description: string,
   image: string,
-): MenuItem => ({ id, name, price, dietary, description, image });
+  customisable = false,
+): MenuItem => ({ id, name, price, dietary, description, image, customisable });
 
 export const spicyWicyMenuItems: MenuItem[] = [
   item('ginger-tea', 'Ginger Tea (Freshly Made)', 59, 'veg', 'Freshly brewed tea with warming ginger.', images.beverage),
-  item('peri-peri-maggi', 'Peri Peri Maggi', 129, 'veg', 'Classic noodles tossed with bold peri peri spice.', images.maggi),
+  item('peri-peri-maggi', 'Peri Peri Maggi', 129, 'veg', 'Classic noodles tossed with bold peri peri spice.', images.maggi, true),
   item('indori-poha-ratlami-sev', 'Indori Poha With Ratlami Sev', 119, 'veg', 'Soft poha finished with crunchy Ratlami sev.', images.poha),
-  item('double-masala-maggi', 'Double Masala Maggi', 119, 'veg', 'Twice the masala for a deeply savoury bowl.', images.maggi),
+  item('double-masala-maggi', 'Double Masala Maggi', 119, 'veg', 'Twice the masala for a deeply savoury bowl.', images.maggi, true),
   item('desi-masala-spice-maggi', 'Desi-masala-Spice Maggi', 139, 'veg', 'A desi spice blend folded through hot noodles.', images.maggi),
   item('bun-maska-amul-butter', 'Bun Maska - Amul Butter', 79, 'veg', 'Soft toasted bun with generous Amul butter.', images.bread),
   item('natural-tender-coconut-ice-cream', 'Natural Tender Coconut Ice Cream', 149, 'veg', 'Cool, creamy tender coconut scoop.', images.iceCream),
@@ -83,12 +85,12 @@ export const spicyWicyMenuItems: MenuItem[] = [
   item('caramelised-onion-maggi', 'Caramelised Onion Maggi', 139, 'veg', 'Sweet caramelised onions with savoury Maggi.', images.maggi),
   item('chilli-tomato-garlic-maggi', 'Chilli Tomato Garlic Maggi', 149, 'veg', 'Bright tomato, chilli, and garlic noodles.', images.maggi),
   item('chicken-bread-omelette', 'Chicken Bread Omelette', 199, 'non-veg', 'Fluffy omelette with chicken between toasted bread.', images.omelette),
-  item('bun-omelette', 'Bun Omelette', 129, 'egg', 'Masala omelette tucked into a soft bun.', images.omelette),
+  item('bun-omelette', 'Bun Omelette', 129, 'egg', 'Masala omelette tucked into a soft bun.', images.omelette, true),
   item('chef-special-bread-omelette', 'Chef Special Bread Omelette (2 slice)', 169, 'egg', 'Chef-style masala omelette with two bread slices.', images.omelette),
-  item('signature-burger', 'Signature Burger', 179, 'veg', 'Spicy Wicy house burger with fresh crunch.', images.burger),
-  item('signature-double-chicken-burger', 'Signature Double Chicken Burger', 299, 'non-veg', 'Double chicken patties layered in a soft bun.', images.burger),
+  item('signature-burger', 'Signature Burger', 179, 'veg', 'Spicy Wicy house burger with fresh crunch.', images.burger, true),
+  item('signature-double-chicken-burger', 'Signature Double Chicken Burger', 299, 'non-veg', 'Double chicken patties layered in a soft bun.', images.burger, true),
   item('schezwan-chicken-burger', 'Schezwan Chicken Burger', 229, 'non-veg', 'Chicken burger with a Schezwan kick.', images.burger),
-  item('chicken-cheese-burger', 'Chicken Cheese Burger', 249, 'non-veg', 'Juicy chicken, melted cheese, and fresh crunch.', images.burger),
+  item('chicken-cheese-burger', 'Chicken Cheese Burger', 249, 'non-veg', 'Juicy chicken, melted cheese, and fresh crunch.', images.burger, true),
   item('coleslaw-cheese-craver', 'Coleslaw Cheese Craver', 199, 'veg', 'Creamy coleslaw and cheese in a warm bun.', images.burger),
   item('signature-paneer-cheese-craver', 'Signature Paneer Cheese Craver', 219, 'veg', 'Spiced paneer and cheese in a loaded bun.', images.burger),
   item('egg-chicken-soupy-maggi', 'Egg Chicken Soupy Maggi (1 bowl)', 229, 'non-veg', 'Soupy Maggi with egg and chicken in one bowl.', images.maggi),
@@ -202,7 +204,6 @@ export const spicyWicyCategories: MenuCategory[] = [
 
 export const spicyWicyRestaurant = {
   name: 'Spicy Wicy - Dicey',
-  rating: '4.6',
   location: 'Koramangala · 2.1 km away',
   deliveryTime: '25–35 min',
   offers: ['20% off up to ₹100', 'Free delivery above ₹299', 'Extra 10% off with select offers'],
